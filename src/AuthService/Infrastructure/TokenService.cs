@@ -25,7 +25,7 @@ namespace AuthService.Infrastructure
             new Claim(ClaimTypes.Role, role.ToString())
         };
 
-            var expire_time = DateTime.UtcNow.AddMinutes(15);
+            var expire_time = DateTime.UtcNow.AddMinutes(30);
             var authService_Audience = _configuration["Jwt:Audience"];
             var authService_issuer = _configuration["Jwt:Issuer"];
             var authService_secretKey = _configuration["Jwt:Key"];
