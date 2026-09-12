@@ -1,11 +1,11 @@
 using LibraryApi.Application.Services;
 using LibraryApi.Infrastructure.Datas;
 using LibraryApi.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+
 using Microsoft.OpenApi.Models;
-using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,29 +46,23 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
-    });
+
 
 var app = builder.Build();
-app.UseAuthentication();
-app.UseAuthorization();
+
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.UseSwagger(options =>
+    {
+        options.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+        {
+            swaggerDoc.Servers = new List<OpenApiServer>
+            {
+                new OpenApiServer { Url = "" }
+            };
+        });
+    });
     app.UseSwaggerUI();
 }
 

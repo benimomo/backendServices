@@ -41,23 +41,25 @@ namespace AuthService.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
-            if (user==null)
+            if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
             {
-                return Unauthorized("Invalid username or password");
+                return Unauthorized(new { message = "Username or password cannot be empty" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Invalid username or password" });
             }
 
             var hashPasswordIsMatch = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
             if (!hashPasswordIsMatch)
             {
-                return Unauthorized("Invalid username or password");
+                return Unauthorized(new { message = "Invalid username or password" });
             }
+
             var token = _tokenService.CreateToken(user.Id.ToString(), user.Username, user.Role);
             return Ok(new { Token = token });
-
         }
-
-
-
     }
 }
