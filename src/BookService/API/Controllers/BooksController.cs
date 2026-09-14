@@ -16,75 +16,126 @@ public class BooksController : ControllerBase
         _bookService = bookService;
     }
 
-    
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<BookDto>>> GetAll()
+    public async Task<IActionResult> GetAll()
     {
         var books = await _bookService.GetAllBooksAsync();
-        return Ok(books);
+
+        if (!books.Any())
+        {
+            return Ok(new ApiResponse<IEnumerable<BookDto>>
+            {
+                Success = true,
+                Message = BookMessages.NoBooksAvailable,
+                Data = books
+            });
+        }
+
+        return Ok(new ApiResponse<IEnumerable<BookDto>>
+        {
+            Success = true,
+            Message = BookMessages.BooksRetrieved,
+            Data = books
+        });
     }
 
-    
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<BookDto>> GetById(int id)
+    public async Task<IActionResult> GetById(int id)
     {
         var book = await _bookService.GetBookByIdAsync(id);
         if (book is null)
+        {
             return NotFound(new ApiResponse<BookDto>
             {
                 Success = false,
                 Message = BookMessages.BookNotFound,
                 ErrorCode = "BOOK_001"
             });
+        }
 
-        return Ok(book);
+        return Ok(new ApiResponse<BookDto>
+        {
+            Success = true,
+            Message = BookMessages.BookRetrieved,
+            Data = book
+        });
     }
 
-    
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<BookDto>>> Search([FromQuery] string query)
+    public async Task<IActionResult> Search([FromQuery] string query)
     {
         var books = await _bookService.SearchBooksAsync(query);
-        return Ok(books);
+
+        if (!books.Any())
+        {
+            return Ok(new ApiResponse<IEnumerable<BookDto>>
+            {
+                Success = true,
+                Message = BookMessages.NoBooksAvailable,
+                Data = books
+            });
+        }
+
+        return Ok(new ApiResponse<IEnumerable<BookDto>>
+        {
+            Success = true,
+            Message = BookMessages.BooksRetrieved,
+            Data = books
+        });
     }
 
-    
     [HttpPost]
-    public async Task<ActionResult<BookDto>> Create([FromBody] CreateBookDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateBookDto dto)
     {
         var createdBook = await _bookService.CreateBookAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = createdBook.Id }, createdBook);
+
+        return CreatedAtAction(nameof(GetById), new { id = createdBook.Id }, new ApiResponse<BookDto>
+        {
+            Success = true,
+            Message = BookMessages.BookCreatedSuccessfully,
+            Data = createdBook
+        });
     }
 
-    
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateBookDto dto)
     {
         var updated = await _bookService.UpdateBookAsync(id, dto);
         if (!updated)
-            return NotFound(new ApiResponse<BookDto>
+        {
+            return NotFound(new ApiResponse<object>
             {
                 Success = false,
                 Message = BookMessages.BookNotFound,
                 ErrorCode = "BOOK_001"
             });
+        }
 
-        return NoContent();
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = BookMessages.BookUpdatedSuccessfully
+        });
     }
 
-    
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _bookService.DeleteBookAsync(id);
         if (!deleted)
-            return NotFound(new ApiResponse<BookDto>
+        {
+            return NotFound(new ApiResponse<object>
             {
                 Success = false,
                 Message = BookMessages.BookNotFound,
                 ErrorCode = "BOOK_001"
             });
+        }
 
-        return NoContent();
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = BookMessages.BookDeletedSuccessfully
+        });
     }
 }

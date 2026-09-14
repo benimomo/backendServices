@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shared.Constants;
-
 namespace Shared.Middlewares;
 
 public class ExceptionHandlingMiddleware
