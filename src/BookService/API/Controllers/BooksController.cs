@@ -1,13 +1,12 @@
 using LibraryApi.Application.DTOs;
 using LibraryApi.Application.Services;
-//using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Constants;
 
 namespace LibraryApi.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-//[Authorize]
 public class BooksController : ControllerBase
 {
     private readonly IBookService _bookService;
@@ -31,7 +30,12 @@ public class BooksController : ControllerBase
     {
         var book = await _bookService.GetBookByIdAsync(id);
         if (book is null)
-            return NotFound(new { message = $"کتابی با شناسه {id} یافت نشد." });
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = BookMessages.BookNotFound,
+                ErrorCode = "BOOK_001"
+            });
 
         return Ok(book);
     }
@@ -58,7 +62,12 @@ public class BooksController : ControllerBase
     {
         var updated = await _bookService.UpdateBookAsync(id, dto);
         if (!updated)
-            return NotFound(new { message = $"کتابی با شناسه {id} برای ویرایش پیدا نشد." });
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = BookMessages.BookNotFound,
+                ErrorCode = "BOOK_001"
+            });
 
         return NoContent();
     }
@@ -69,7 +78,12 @@ public class BooksController : ControllerBase
     {
         var deleted = await _bookService.DeleteBookAsync(id);
         if (!deleted)
-            return NotFound(new { message = $"کتابی با شناسه {id} برای حذف پیدا نشد." });
+            return NotFound(new ApiResponse<BookDto>
+            {
+                Success = false,
+                Message = BookMessages.BookNotFound,
+                ErrorCode = "BOOK_001"
+            });
 
         return NoContent();
     }

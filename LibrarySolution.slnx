@@ -6,6 +6,7 @@
     <Project Path="src/ApiGateway/ApiGateway.csproj" />
     <Project Path="src/AuthService/AuthService.csproj" />
     <Project Path="src/BookService/BookService.csproj" />
+    <Project Path="src/Shared/Shared.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="BookService.UnitTests/BookService.UnitTests.csproj" Id="6f3ee923-60dd-46a0-a28d-4cd30937f7ef" />

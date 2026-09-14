@@ -276,6 +276,19 @@
         "build": {
           "buildTransitive/net8.0/Yarp.ReverseProxy.targets": {}
         }
+      },
+      "Shared/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Shared.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Shared.dll": {}
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
       }
     }
   },
@@ -916,11 +929,17 @@
         "yarp.reverseproxy.2.3.0.nupkg.sha512",
         "yarp.reverseproxy.nuspec"
       ]
+    },
+    "Shared/1.0.0": {
+      "type": "project",
+      "path": "../Shared/Shared.csproj",
+      "msbuildProject": "../Shared/Shared.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 10.0.12",
+      "Shared >= 1.0.0",
       "Swashbuckle.AspNetCore >= 10.2.3",
       "Yarp.ReverseProxy >= 2.3.0"
     ]
@@ -957,7 +976,11 @@
         "net10.0": {
           "framework": "net10.0",
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\User\\Desktop\\Library-api\\src\\Shared\\Shared.csproj": {
+              "projectPath": "C:\\Users\\User\\Desktop\\Library-api\\src\\Shared\\Shared.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

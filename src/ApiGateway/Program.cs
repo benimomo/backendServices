@@ -26,6 +26,38 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSettings["Key"]))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = async context =>
+            {
+                context.HandleResponse(); // جلوی رفتار پیش‌فرض رو می‌گیره
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+
+                var response = new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Token is missing or invalid.",
+                    ErrorCode = "AUTH_004"
+                };
+
+                await context.Response.WriteAsJsonAsync(response);
+            },
+            OnForbidden = async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+
+                var response = new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "You do not have permission to access this resource.",
+                    ErrorCode = "AUTH_005"
+                };
+
+                await context.Response.WriteAsJsonAsync(response);
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>

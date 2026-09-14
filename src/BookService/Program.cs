@@ -5,6 +5,7 @@ using LibraryApi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 using Microsoft.OpenApi.Models;
+using Shared.Middlewares;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,7 +50,7 @@ builder.Services.AddSwaggerGen(options =>
 
 
 var app = builder.Build();
-
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

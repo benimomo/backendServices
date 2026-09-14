@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{url}}api/auth/login"
+method: POST
+body:
+  type: json
+  content: "  {\r
+
+    \    \"username\": \"benita\",\r
+
+    \    \"password\": \"\"\r
+
+    \  }"
+scripts:
+  - type: afterResponse
+    code: "  const res = pm.response.json();\r
+
+      \  const token = res.token || res.Token;\r
+
+      \  if (token) {\r
+
+      \      pm.environment.set(\"token\", token);\r
+
+      \      console.log(\"Token ذخیره شد ✅\");\r
+
+      \  }"
+    language: text/javascript
+order: 1789221650712

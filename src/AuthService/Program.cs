@@ -1,13 +1,28 @@
 using AuthService.Application.Interfaces;
 using AuthService.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Shared.Constants;
+using Shared.Middlewares;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var response = new ApiResponse<object>
+            {
+                Success = false,
+                Message = CommonMessages.ValidationFailed, 
+                ErrorCode = "VALIDATION_ERROR"
+            };
 
-builder.Services.AddControllers();
-builder.Services.AddScoped<ITokenService, TokenService>();
+            return new BadRequestObjectResult(response);
+        };
+    }); builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("AuthConnection")));
 
@@ -15,6 +30,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
