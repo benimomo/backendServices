@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.Constants;
 using System.Data;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AuthService.API.Controllers
 {
@@ -18,12 +19,14 @@ namespace AuthService.API.Controllers
         private readonly ITokenService _tokenService;
         private readonly AuthDbContext _context;
         private readonly ILogger<AuthController> _logger;
+        private IMemoryCache _cache;
 
-        public AuthController(ITokenService tokenService, AuthDbContext context, ILogger<AuthController> logger)
+        public AuthController(ITokenService tokenService, AuthDbContext context, ILogger<AuthController> logger, IMemoryCache cache)
         {
             _tokenService = tokenService;
             _context = context;
             _logger = logger;
+            _cache = cache;
         }
 
         [HttpPost("register")]
@@ -75,7 +78,9 @@ namespace AuthService.API.Controllers
                 });
             }
 
-            var token = _tokenService.CreateToken(user.Id.ToString(), user.Username, user.Role);
+            var accessToken = _tokenService.CreateToken(user.Id.ToString(), user.Username, user.Role);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            _cache.Set(refreshToken, user.Id.ToString(), TimeSpan.FromDays(7));
 
             return Ok(new ApiResponse<LoginResponseDto>
             {
@@ -83,10 +88,78 @@ namespace AuthService.API.Controllers
                 Message = AuthMessages.LoginSuccessful,
                 Data = new LoginResponseDto
                 {
-                    Token = token,
+                    Token = accessToken,
+                    RefreshToken = refreshToken,
                     Username = user.Username,
                     Role = user.Role.ToString()
                 }
+            });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(RefreshTokenRequestDto dto)
+        {
+            if (!_cache.TryGetValue(dto.RefreshToken, out string? userId))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = AuthMessages.InvalidRefreshToken,
+                    ErrorCode = "AUTH_004"
+                });
+            }
+
+            var user = await _context.Users.FindAsync(int.Parse(userId!));
+            if (user == null)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = AuthMessages.UserNotFound, 
+                    ErrorCode = "AUTH_001"
+                });
+            }
+
+            _cache.Remove(dto.RefreshToken);
+
+            var newAccessToken = _tokenService.CreateToken(user.Id.ToString(), user.Username, user.Role);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+            _cache.Set(newRefreshToken, user.Id.ToString(), TimeSpan.FromDays(7));
+
+            return Ok(new ApiResponse<LoginResponseDto>
+            {
+                Success = true,
+                Message = AuthMessages.TokenRefreshed, 
+                Data = new LoginResponseDto
+                {
+                    Token = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    Username = user.Username,
+                    Role = user.Role.ToString()
+                }
+            });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult logout(RefreshTokenRequestDto dto)
+        {
+            if (!_cache.TryGetValue(dto.RefreshToken, out string? userId))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = AuthMessages.InvalidRefreshToken,
+                    ErrorCode = "AUTH_004"
+                });
+            }
+
+            _cache.Remove(dto.RefreshToken);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = AuthMessages.LogoutSuccessful
             });
         }
     }
